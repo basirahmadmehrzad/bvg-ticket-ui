@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BVG Ticket Machine – UI Prototype</title>
+  <style>
+    :root{
+      --bg:#0b0d10;
+      --panel:#131820;
+      --panel2:#0f141b;
+      --text:#e8eef7;
+      --muted:#aab6c7;
+      --line:#253142;
+      --accent:#ffd400; /* BVG-ish yellow */
+      --accent2:#16c172;
+      --danger:#ff5a6a;
+      --shadow: 0 16px 40px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius2: 14px;
+      --focus: 0 0 0 3px rgba(255,212,0,.35);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background: radial-gradient(1000px 600px at 20% 10%, rgba(255,212,0,.12), transparent 60%),
+                  radial-gradient(800px 500px at 90% 30%, rgba(22,193,114,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px 40px;
+    }
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:44px;height:44px;border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,212,0,.95), rgba(255,212,0,.75));
+      box-shadow: 0 10px 25px rgba(255,212,0,.20);
+      display:grid;place-items:center;
+      color:#111;font-weight:900;letter-spacing:.5px;
+    }
+    .title{display:flex;flex-direction:column;line-height:1.1}
+    .title b{font-size:18px}
+    .title span{font-size:13px;color:var(--muted)}
+    .status{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+    .pill{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      padding:8px 10px;border-radius:999px;
+      display:flex;align-items:center;gap:8px;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--accent2)}
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      border:1px solid var(--line);
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      white-space:nowrap;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 16px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding: 14px 16px;
+      background: linear-gradient(180deg, rgba(255,212,0,.10), rgba(255,255,255,.01));
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .cardHeader h2{margin:0;font-size:16px;letter-spacing:.2px}
+    .cardHeader .step{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:8px}
+    .content{padding:16px}
+
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row > *{flex:1}
+
+    .section{
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      background: rgba(0,0,0,.18);
+      padding: 12px;
+    }
+    .section h3{
+      margin:0 0 10px 0;
+      font-size:13px;
+      color: var(--muted);
+      font-weight:600;
+      letter-spacing:.2px;
+    }
+
+    .seg{
+      display:flex;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      overflow:hidden;
+      background: rgba(255,255,255,.02);
+    }
+    .seg button{
+      flex:1;
+      padding: 10px 12px;
+      border:0;
+      background: transparent;
+      color: var(--text);
+      cursor:pointer;
+      font-weight:700;
+      letter-spacing:.2px;
+      font-size:14px;
+    }
+    .seg button:focus{outline:none; box-shadow: var(--focus);}
+    .seg button.active{
+      background: rgba(255,212,0,.18);
+      color: #fff;
+    }
+
+    .tickets{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+    }
+    @media (max-width: 540px){
+      .tickets{grid-template-columns:1fr}
+    }
+
+    .ticketBtn{
+      text-align:left;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,.02);
+      cursor:pointer;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      min-height: 84px;
+    }
+    .ticketBtn:hover{transform: translateY(-1px); border-color:#2f3e56}
+    .ticketBtn:focus{outline:none; box-shadow: var(--focus);}
+    .ticketBtn.selected{
+      border-color: rgba(255,212,0,.65);
+      background: rgba(255,212,0,.12);
+    }
+    .ticketName{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800}
+    .ticketDesc{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.25}
+    .priceTag{font-weight:900;color: var(--accent);white-space:nowrap}
+
+    .qty{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .qtyCtrls{display:flex;align-items:center;gap:10px}
+
+    .btn{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      cursor:pointer;
+      font-weight:800;
+      letter-spacing:.2px;
+      transition: background .2s ease, transform .06s ease, border-color .2s ease;
+    }
+    .btn:hover{background: rgba(255,255,255,.06); transform: translateY(-1px);}
+    .btn:focus{outline:none; box-shadow: var(--focus);}
+    .btn.primary{background: rgba(255,212,0,.16); border-color: rgba(255,212,0,.55);}
+    .btn.primary:hover{background: rgba(255,212,0,.22);}
+    .btn.success{background: rgba(22,193,114,.16); border-color: rgba(22,193,114,.55);}
+    .btn.danger{background: rgba(255,90,106,.12); border-color: rgba(255,90,106,.55);}
+    .btn.small{padding:10px 12px;border-radius:12px;font-weight:900}
+    .btn.icon{width:46px;display:grid;place-items:center;padding:0}
+
+    .summary{display:flex;flex-direction:column;gap: 10px}
+    .line{display:flex;justify-content:space-between;gap:12px;font-size:14px;color: var(--muted)}
+    .line b{color:var(--text)}
+    .total{
+      display:flex;justify-content:space-between;gap:12px;
+      padding-top: 10px;margin-top: 6px;
+      border-top: 1px dashed rgba(255,255,255,.18);
+      font-size:16px;
+    }
+    .total b{color: var(--accent); font-size:18px}
+    .help{font-size:13px;color:var(--muted);line-height:1.35}
+
+    /* Zone map */
+    .mapWrap{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .mapLegend{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      font-size:12px;
+      color: var(--muted);
+    }
+    .legendItem{
+      display:flex;align-items:center;gap:8px;
+      border:1px solid var(--line);
+      padding:6px 8px;border-radius:999px;
+      background: rgba(255,255,255,.02);
+    }
+    .swatch{
+      width:10px;height:10px;border-radius:3px;background: rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.18);
+    }
+    .swatch.ab{background: rgba(255,212,0,.45); border-color: rgba(255,212,0,.55);}
+    .swatch.bc{background: rgba(22,193,114,.35); border-color: rgba(22,193,114,.55);}
+
+    .overlay{
+      position:fixed;inset:0;
+      background: rgba(0,0,0,.58);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+    .overlay.show{display:flex}
+    .modal{
+      width:min(560px, 96vw);
+      background: #0e1218;
+      border:1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal .top{
+      padding: 16px;
+      border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      background: linear-gradient(180deg, rgba(22,193,114,.10), rgba(255,255,255,.01));
+    }
+    .modal .top b{font-size:16px}
+    .modal .body{padding:16px}
+    .progress{
+      height:10px;border-radius:999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      overflow:hidden;
+      margin-top:12px;
+    }
+    .bar{
+      height:100%;
+      width: 0%;
+      background: rgba(255,212,0,.8);
+      transition: width .25s ease;
+    }
+
+    /* SVG highlight classes */
+    .zone-fill{
+      transition: opacity .18s ease, filter .18s ease;
+      opacity: .18;
+    }
+    .zone-stroke{
+      opacity: .9;
+    }
+    .zone-on{
+      opacity: .95;
+      filter: drop-shadow(0 10px 18px rgba(255,212,0,.15));
+    }
+    .zone-on-bc{
+      opacity: .85;
+      filter: drop-shadow(0 10px 18px rgba(22,193,114,.10));
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">BVG</div>
+        <div class="title">
+          <b id="uiTitle">Ticket Machine</b>
+          <span id="uiSub">Select ticket, zones, and pay</span>
+        </div>
+      </div>
+
+      <div class="status">
+        <div class="pill" title="Prototype status">
+          <span class="dot"></span>
+          <span id="modeText">Prototype</span>
+        </div>
+        <div class="pill" title="Keyboard shortcuts">
+          <span class="kbd">Esc</span> reset
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Left: ticket selection -->
+      <div class="card">
+        <div class="cardHeader">
+          <h2 id="stepTitle">1) Choose ticket</h2>
+          <div class="step">
+            <span id="langLabel">Language</span>
+            <div class="seg" role="tablist" aria-label="Language">
+              <button id="langDE" class="active" role="tab" aria-selected="true">DE</button>
+              <button id="langEN" role="tab" aria-selected="false">EN</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="row">
+            <!-- Zones + MAP -->
+            <div class="section">
+              <h3 id="zoneTitle">Zones</h3>
+              <div class="seg" role="tablist" aria-label="Zones">
+                <button class="zoneBtn active" data-zone="AB" role="tab" aria-selected="true">AB</button>
+                <button class="zoneBtn" data-zone="BC" role="tab" aria-selected="false">BC</button>
+                <button class="zoneBtn" data-zone="ABC" role="tab" aria-selected="false">ABC</button>
+              </div>
+
+              <div class="mapWrap" style="margin-top:12px;">
+                <!-- Simple “ring map” (prototype visual) -->
+                <svg viewBox="0 0 360 210" width="100%" height="210" aria-label="Zone map" role="img"
+                     style="border:1px solid var(--line); border-radius:14px; background: rgba(255,255,255,.02);">
+                  <defs>
+                    <radialGradient id="bgGlow" cx="35%" cy="35%" r="80%">
+                      <stop offset="0%" stop-color="rgba(255,212,0,.10)"/>
+                      <stop offset="60%" stop-color="rgba(255,255,255,0)"/>
+                    </radialGradient>
+                  </defs>
+
+                  <!-- Background -->
+                  <rect x="0" y="0" width="360" height="210" fill="url(#bgGlow)"></rect>
+
+                  <!-- Stylized “Berlin blob” base -->
+                  <path d="M56,116 C60,70 112,38 170,42 C220,46 268,64 296,100
+                           C324,136 306,178 260,186 C214,194 178,172 140,180
+                           C100,188 52,162 56,116 Z"
+                        fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+
+                  <!-- BC ring (outer) -->
+                  <path id="zoneBC"
+                        d="M72,116 C76,78 118,54 170,56 C214,58 254,72 280,102
+                           C304,130 292,164 254,170 C214,176 184,160 150,166
+                           C112,172 70,150 72,116 Z"
+                        class="zone-fill"
+                        fill="rgba(22,193,114,.28)" stroke="rgba(22,193,114,.55)" stroke-width="2"/>
+
+                  <!-- AB core (inner) -->
+                  <path id="zoneAB"
+                        d="M108,118 C110,96 132,84 160,84 C186,84 208,92 224,108
+                           C238,122 232,142 210,146 C188,150 170,140 154,144
+                           C132,150 106,140 108,118 Z"
+                        class="zone-fill"
+                        fill="rgba(255,212,0,.38)" stroke="rgba(255,212,0,.65)" stroke-width="2"/>
+
+                  <!-- Labels -->
+                  <text x="168" y="120" text-anchor="middle" font-size="14" fill="rgba(255,255,255,.85)" font-weight="800">AB</text>
+                  <text x="266" y="92" text-anchor="middle" font-size="12" fill="rgba(255,255,255,.55)" font-weight="700">BC</text>
+
+                  <!-- Small pin for BER (symbolic) -->
+                  <circle cx="294" cy="152" r="4.5" fill="rgba(255,255,255,.70)"></circle>
+                  <text x="294" y="170" text-anchor="middle" font-size="10.5" fill="rgba(255,255,255,.55)" font-weight="700">BER</text>
+                </svg>
+
+                <div class="mapLegend">
+                  <div class="legendItem"><span class="swatch ab"></span><span id="legendAB">AB (City)</span></div>
+                  <div class="legendItem"><span class="swatch bc"></span><span id="legendBC">BC (Outer)</span></div>
+                  <div class="legendItem"><span class="swatch"></span><span id="legendABC">ABC = AB + BC</span></div>
+                </div>
+
+                <div class="help" id="zoneHelp">AB = Berlin city • ABC includes BER Airport</div>
+              </div>
+            </div>
+
+            <div class="section">
+              <h3 id="categoryTitle">Category</h3>
+              <div class="seg" role="tablist" aria-label="Category">
+                <button class="catBtn active" data-cat="standard" role="tab" aria-selected="true" id="catStandard">Standard</button>
+                <button class="catBtn" data-cat="reduced" role="tab" aria-selected="false" id="catReduced">Reduced</button>
+              </div>
+              <div class="help" id="catHelp" style="margin-top:10px;">
+                Reduced fares: e.g., children / eligible passengers (prototype text).
+              </div>
+            </div>
+          </div>
+
+          <div class="section" style="margin-top:12px;">
+            <h3 id="ticketTitle">Tickets</h3>
+            <div class="tickets" id="ticketGrid"></div>
+          </div>
+
+          <div class="section" style="margin-top:12px;">
+            <h3 id="qtyTitle">Quantity</h3>
+            <div class="qty">
+              <div>
+                <div style="font-weight:900" id="qtyLabel">Number of tickets</div>
+                <div class="help" id="qtyHelp">Use + / − to adjust.</div>
+              </div>
+              <div class="qtyCtrls">
+                <button class="btn icon" id="minusBtn" aria-label="Decrease quantity">−</button>
+                <div style="min-width:46px;text-align:center;font-weight:900;font-size:18px" id="qtyValue">1</div>
+                <button class="btn icon" id="plusBtn" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <button class="btn danger" id="resetBtn">Reset</button>
+            <button class="btn primary" id="toPayBtn">Continue to payment</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: summary + payment -->
+      <div class="card">
+        <div class="cardHeader">
+          <h2 id="summaryTitle">2) Summary & Payment</h2>
+          <div class="step" id="stepHint">Review and pay</div>
+        </div>
+        <div class="content">
+          <div class="section">
+            <h3 id="summaryH">Your selection</h3>
+            <div class="summary">
+              <div class="line"><span id="sumTicketL">Ticket</span><b id="sumTicket">—</b></div>
+              <div class="line"><span id="sumZoneL">Zone</span><b id="sumZone">AB</b></div>
+              <div class="line"><span id="sumCatL">Category</span><b id="sumCat">Standard</b></div>
+              <div class="line"><span id="sumQtyL">Quantity</span><b id="sumQty">1</b></div>
+              <div class="total"><span id="sumTotalL">Total</span><b id="sumTotal">€0.00</b></div>
+              <div class="help" id="sumHelp">Prices are approximate and for prototyping only.</div>
+            </div>
+          </div>
+
+          <div class="section" style="margin-top:12px;">
+            <h3 id="payTitle">Payment</h3>
+            <div class="row">
+              <button class="btn success" id="payCardBtn">Pay by card</button>
+              <button class="btn" id="payCashBtn">Pay by cash</button>
+            </div>
+            <div class="help" id="payHelp" style="margin-top:10px;">
+              Prototype payment flow: confirm → printing.
+            </div>
+          </div>
+
+          <div class="section" style="margin-top:12px;">
+            <h3 id="extrasTitle">Extras</h3>
+            <div class="row">
+              <button class="btn small" id="receiptBtn">Toggle receipt</button>
+            </div>
+            <div class="help" id="extrasHelp" style="margin-top:10px;">
+              This panel mimics common kiosk options.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- processing overlay -->
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Processing payment">
+      <div class="top">
+        <b id="modalTitle">Processing…</b>
+        <button class="btn small danger" id="cancelBtn">Cancel</button>
+      </div>
+      <div class="body">
+        <div id="modalText" class="help">Please follow the instructions on the payment terminal.</div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <div class="help" style="margin-top:12px;" id="modalSub">Don’t remove your card until prompted.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Data model (approximate, for prototype only) ---
+    const PRICES = {
+      standard: {
+        AB: [
+          { id:"single", name:{de:"Einzelfahrschein", en:"Single ticket"}, desc:{de:"Gültig 120 Min., Umsteigen erlaubt.", en:"Valid 120 min, transfers allowed."}, price:3.20 },
+          { id:"short",  name:{de:"Kurzstrecke", en:"Short trip"}, desc:{de:"Bis 3 Stationen (S/U) bzw. 6 (Bus/Tram).", en:"Up to 3 stops (S/U) or 6 (bus/tram)."}, price:2.00 },
+          { id:"day",    name:{de:"24-Stunden-Karte", en:"24-hour ticket"}, desc:{de:"Unbegrenzt fahren für 24 Stunden.", en:"Unlimited travel for 24 hours."}, price:9.50 },
+          { id:"four",   name:{de:"4-Fahrten-Karte", en:"4-trip ticket"}, desc:{de:"Vier Einzelfahrten, einzeln entwertbar.", en:"Four single trips, validate each."}, price:11.50 },
+          { id:"bike",   name:{de:"Fahrradkarte", en:"Bike ticket"}, desc:{de:"Fahrradmitnahme (zusätzlich).", en:"Bicycle add-on ticket."}, price:2.30 },
+          { id:"group",  name:{de:"Kleingruppenkarte", en:"Small group (day)"}, desc:{de:"Bis 5 Personen, 24 Stunden.", en:"Up to 5 people, 24 hours."}, price:29.00 }
+        ],
+        BC: [
+          { id:"single", name:{de:"Einzelfahrschein", en:"Single ticket"}, desc:{de:"Gültig 120 Min., Umsteigen erlaubt.", en:"Valid 120 min, transfers allowed."}, price:3.50 },
+          { id:"short",  name:{de:"Kurzstrecke", en:"Short trip"}, desc:{de:"Kurzstrecke außerhalb AB (vereinfacht).", en:"Short trip outside AB (simplified)."}, price:2.10 },
+          { id:"day",    name:{de:"24-Stunden-Karte", en:"24-hour ticket"}, desc:{de:"Unbegrenzt fahren für 24 Stunden.", en:"Unlimited travel for 24 hours."}, price:10.20 },
+          { id:"four",   name:{de:"4-Fahrten-Karte", en:"4-trip ticket"}, desc:{de:"Vier Einzelfahrten.", en:"Four single trips."}, price:12.50 },
+          { id:"bike",   name:{de:"Fahrradkarte", en:"Bike ticket"}, desc:{de:"Fahrradmitnahme (zusätzlich).", en:"Bicycle add-on ticket."}, price:2.50 },
+          { id:"group",  name:{de:"Kleingruppenkarte", en:"Small group (day)"}, desc:{de:"Bis 5 Personen, 24 Stunden.", en:"Up to 5 people, 24 hours."}, price:31.00 }
+        ],
+        ABC: [
+          { id:"single", name:{de:"Einzelfahrschein", en:"Single ticket"}, desc:{de:"Inkl. BER (ABC).", en:"Includes BER (ABC)."}, price:4.00 },
+          { id:"short",  name:{de:"Kurzstrecke", en:"Short trip"}, desc:{de:"Kurzstrecke (vereinfacht).", en:"Short trip (simplified)."}, price:2.30 },
+          { id:"day",    name:{de:"24-Stunden-Karte", en:"24-hour ticket"}, desc:{de:"Unbegrenzt fahren für 24 Stunden.", en:"Unlimited travel for 24 hours."}, price:11.00 },
+          { id:"four",   name:{de:"4-Fahrten-Karte", en:"4-trip ticket"}, desc:{de:"Vier Einzelfahrten.", en:"Four single trips."}, price:14.00 },
+          { id:"bike",   name:{de:"Fahrradkarte", en:"Bike ticket"}, desc:{de:"Fahrradmitnahme (zusätzlich).", en:"Bicycle add-on ticket."}, price:2.70 },
+          { id:"group",  name:{de:"Kleingruppenkarte", en:"Small group (day)"}, desc:{de:"Bis 5 Personen, 24 Stunden.", en:"Up to 5 people, 24 hours."}, price:33.00 }
+        ]
+      },
+      reduced: {
+        AB: [
+          { id:"single", name:{de:"Einzelfahrschein (erm.)", en:"Single (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:2.00 },
+          { id:"short",  name:{de:"Kurzstrecke (erm.)", en:"Short trip (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:1.50 },
+          { id:"day",    name:{de:"24-Stunden-Karte (erm.)", en:"24-hour (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:6.00 },
+          { id:"four",   name:{de:"4-Fahrten (erm.)", en:"4-trip (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:7.00 }
+        ],
+        BC: [
+          { id:"single", name:{de:"Einzelfahrschein (erm.)", en:"Single (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:2.20 },
+          { id:"short",  name:{de:"Kurzstrecke (erm.)", en:"Short trip (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:1.60 },
+          { id:"day",    name:{de:"24-Stunden (erm.)", en:"24-hour (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:6.50 },
+          { id:"four",   name:{de:"4-Fahrten (erm.)", en:"4-trip (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:7.80 }
+        ],
+        ABC: [
+          { id:"single", name:{de:"Einzelfahrschein (erm.)", en:"Single (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:2.50 },
+          { id:"short",  name:{de:"Kurzstrecke (erm.)", en:"Short trip (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:1.80 },
+          { id:"day",    name:{de:"24-Stunden (erm.)", en:"24-hour (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:7.00 },
+          { id:"four",   name:{de:"4-Fahrten (erm.)", en:"4-trip (reduced)"}, desc:{de:"Ermäßigter Tarif (Prototyp).", en:"Reduced fare (prototype)."}, price:8.50 }
+        ]
+      }
+    };
+
+    const I18N = {
+      de: {
+        uiTitle: "Fahrkartenautomat",
+        uiSub: "Ticket auswählen, Zone wählen, bezahlen",
+        stepTitle: "1) Ticket auswählen",
+        langLabel: "Sprache",
+        zoneTitle: "Zonen",
+        zoneHelp: "AB = Berlin Stadt • ABC inkl. BER Flughafen",
+        legendAB: "AB (Stadt)",
+        legendBC: "BC (Außen)",
+        legendABC: "ABC = AB + BC",
+        categoryTitle: "Kategorie",
+        catStandard: "Standard",
+        catReduced: "Ermäßigt",
+        catHelp: "Ermäßigte Tarife: z. B. Kinder / Berechtigte (Prototyp).",
+        ticketTitle: "Tickets",
+        qtyTitle: "Anzahl",
+        qtyLabel: "Anzahl der Tickets",
+        qtyHelp: "Mit + / − anpassen.",
+        resetBtn: "Zurücksetzen",
+        continue: "Weiter zur Zahlung",
+        summaryTitle: "2) Übersicht & Zahlung",
+        stepHint: "Prüfen und bezahlen",
+        summaryH: "Auswahl",
+        sumTicketL: "Ticket",
+        sumZoneL: "Zone",
+        sumCatL: "Kategorie",
+        sumQtyL: "Anzahl",
+        sumTotalL: "Summe",
+        sumHelp: "Preise sind nur Beispielwerte (Prototyp).",
+        payTitle: "Zahlung",
+        payCard: "Mit Karte zahlen",
+        payCash: "Bar zahlen",
+        payHelp: "Prototyp-Zahlung: bestätigen → Druck.",
+        extrasTitle: "Optionen",
+        receiptOn: "Beleg: An",
+        receiptOff: "Beleg: Aus",
+        extrasHelp: "Dieses Panel simuliert typische Kiosk-Optionen.",
+        processing: "Vorgang läuft…",
+        follow: "Bitte den Anweisungen am Kartenterminal folgen.",
+        dontRemove: "Karte nicht entfernen, bis es angezeigt wird.",
+        insertCash: "Bitte Münzen/Scheine einwerfen.",
+        printing: "Druckt Tickets…",
+        done: "Fertig!",
+        take: "Bitte Ticket(s) entnehmen.",
+        cancel: "Abbrechen"
+      },
+      en: {
+        uiTitle: "Ticket Machine",
+        uiSub: "Select ticket, zones, and pay",
+        stepTitle: "1) Choose ticket",
+        langLabel: "Language",
+        zoneTitle: "Zones",
+        zoneHelp: "AB = Berlin city • ABC includes BER Airport",
+        legendAB: "AB (City)",
+        legendBC: "BC (Outer)",
+        legendABC: "ABC = AB + BC",
+        categoryTitle: "Category",
+        catStandard: "Standard",
+        catReduced: "Reduced",
+        catHelp: "Reduced fares: e.g., children / eligible passengers (prototype text).",
+        ticketTitle: "Tickets",
+        qtyTitle: "Quantity",
+        qtyLabel: "Number of tickets",
+        qtyHelp: "Use + / − to adjust.",
+        resetBtn: "Reset",
+        continue: "Continue to payment",
+        summaryTitle: "2) Summary & Payment",
+        stepHint: "Review and pay",
+        summaryH: "Your selection",
+        sumTicketL: "Ticket",
+        sumZoneL: "Zone",
+        sumCatL: "Category",
+        sumQtyL: "Quantity",
+        sumTotalL: "Total",
+        sumHelp: "Prices are approximate and for prototyping only.",
+        payTitle: "Payment",
+        payCard: "Pay by card",
+        payCash: "Pay by cash",
+        payHelp: "Prototype payment flow: confirm → printing.",
+        extrasTitle: "Extras",
+        receiptOn: "Receipt: On",
+        receiptOff: "Receipt: Off",
+        extrasHelp: "This panel mimics common kiosk options.",
+        processing: "Processing…",
+        follow: "Please follow the instructions on the payment terminal.",
+        dontRemove: "Don’t remove your card until prompted.",
+        insertCash: "Insert coins/banknotes.",
+        printing: "Printing tickets…",
+        done: "Done!",
+        take: "Please take your ticket(s).",
+        cancel: "Cancel"
+      }
+    };
+
+    // --- State ---
+    let state = {
+      lang: "de",
+      zone: "AB",
+      cat: "standard",
+      ticketId: null,
+      qty: 1,
+      receipt: false
+    };
+
+    // --- DOM helpers ---
+    const $ = (id)=>document.getElementById(id);
+    const ticketGrid = $("ticketGrid");
+    const qtyValue = $("qtyValue");
+
+    const money = (v)=> new Intl.NumberFormat(state.lang === "de" ? "de-DE" : "en-GB", {
+      style:"currency", currency:"EUR"
+    }).format(v);
+
+    function currentTickets(){ return PRICES[state.cat][state.zone]; }
+    function selectedTicket(){ return currentTickets().find(t=>t.id === state.ticketId) || null; }
+    function total(){ const t = selectedTicket(); return t ? t.price * state.qty : 0; }
+
+    function applyI18n(){
+      const dict = I18N[state.lang];
+      $("uiTitle").textContent = dict.uiTitle;
+      $("uiSub").textContent = dict.uiSub;
+      $("stepTitle").textContent = dict.stepTitle;
+      $("langLabel").textContent = dict.langLabel;
+
+      $("zoneTitle").textContent = dict.zoneTitle;
+      $("zoneHelp").textContent = dict.zoneHelp;
+      $("legendAB").textContent = dict.legendAB;
+      $("legendBC").textContent = dict.legendBC;
+      $("legendABC").textContent = dict.legendABC;
+
+      $("categoryTitle").textContent = dict.categoryTitle;
+      $("catStandard").textContent = dict.catStandard;
+      $("catReduced").textContent = dict.catReduced;
+      $("catHelp").textContent = dict.catHelp;
+
+      $("ticketTitle").textContent = dict.ticketTitle;
+      $("qtyTitle").textContent = dict.qtyTitle;
+      $("qtyLabel").textContent = dict.qtyLabel;
+      $("qtyHelp").textContent = dict.qtyHelp;
+
+      $("resetBtn").textContent = dict.resetBtn;
+      $("toPayBtn").textContent = dict.continue;
+
+      $("summaryTitle").textContent = dict.summaryTitle;
+      $("stepHint").textContent = dict.stepHint;
+      $("summaryH").textContent = dict.summaryH;
+      $("sumTicketL").textContent = dict.sumTicketL;
+      $("sumZoneL").textContent = dict.sumZoneL;
+      $("sumCatL").textContent = dict.sumCatL;
+      $("sumQtyL").textContent = dict.sumQtyL;
+      $("sumTotalL").textContent = dict.sumTotalL;
+      $("sumHelp").textContent = dict.sumHelp;
+
+      $("payTitle").textContent = dict.payTitle;
+      $("payCardBtn").textContent = dict.payCard;
+      $("payCashBtn").textContent = dict.payCash;
+      $("payHelp").textContent = dict.payHelp;
+
+      $("extrasTitle").textContent = dict.extrasTitle;
+      $("extrasHelp").textContent = dict.extrasHelp;
+      $("receiptBtn").textContent = state.receipt ? dict.receiptOn : dict.receiptOff;
+
+      $("cancelBtn").textContent = dict.cancel;
+    }
+
+    function renderTickets(){
+      ticketGrid.innerHTML = "";
+      const list = currentTickets();
+
+      if (state.ticketId && !list.some(t=>t.id===state.ticketId)) state.ticketId = null;
+
+      list.forEach(t=>{
+        const btn = document.createElement("button");
+        btn.className = "ticketBtn" + (t.id===state.ticketId ? " selected" : "");
+        btn.type = "button";
+        btn.innerHTML = `
+          <div class="ticketName">
+            <span>${t.name[state.lang]}</span>
+            <span class="priceTag">${money(t.price)}</span>
+          </div>
+          <div class="ticketDesc">${t.desc[state.lang]}</div>
+        `;
+        btn.addEventListener("click", ()=>{
+          state.ticketId = t.id;
+          renderTickets();
+          renderSummary();
+        });
+        ticketGrid.appendChild(btn);
+      });
+
+      if (!state.ticketId && list.length){
+        state.ticketId = list[0].id;
+        renderTickets();
+        renderSummary();
+      }
+    }
+
+    function renderSummary(){
+      const t = selectedTicket();
+      $("sumTicket").textContent = t ? t.name[state.lang] : "—";
+      $("sumZone").textContent = state.zone;
+      $("sumCat").textContent = state.lang==="de"
+        ? (state.cat==="standard" ? "Standard" : "Ermäßigt")
+        : (state.cat==="standard" ? "Standard" : "Reduced");
+      $("sumQty").textContent = String(state.qty);
+      $("sumTotal").textContent = money(total());
+      qtyValue.textContent = String(state.qty);
+    }
+
+    function updateZoneMap(){
+      const ab = $("zoneAB");
+      const bc = $("zoneBC");
+
+      // reset
+      ab.classList.remove("zone-on");
+      bc.classList.remove("zone-on-bc");
+
+      if (state.zone === "AB"){
+        ab.classList.add("zone-on");
+      } else if (state.zone === "BC"){
+        bc.classList.add("zone-on-bc");
+      } else if (state.zone === "ABC"){
+        ab.classList.add("zone-on");
+        bc.classList.add("zone-on-bc");
+      }
+    }
+
+    function setLang(lang){
+      state.lang = lang;
+      $("langDE").classList.toggle("active", lang==="de");
+      $("langEN").classList.toggle("active", lang==="en");
+      $("langDE").setAttribute("aria-selected", lang==="de");
+      $("langEN").setAttribute("aria-selected", lang==="en");
+      applyI18n();
+      renderTickets();
+      renderSummary();
+    }
+
+    function setZone(zone){
+      state.zone = zone;
+      document.querySelectorAll(".zoneBtn").forEach(b=>{
+        const on = b.dataset.zone === zone;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      updateZoneMap();
+      renderTickets();
+      renderSummary();
+    }
+
+    function setCat(cat){
+      state.cat = cat;
+      document.querySelectorAll(".catBtn").forEach(b=>{
+        const on = b.dataset.cat === cat;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      renderTickets();
+      renderSummary();
+    }
+
+    function adjustQty(delta){
+      state.qty = Math.max(1, Math.min(9, state.qty + delta));
+      renderSummary();
+    }
+
+    function resetAll(){
+      state.zone = "AB";
+      state.cat = "standard";
+      state.ticketId = null;
+      state.qty = 1;
+      state.receipt = false;
+
+      setZone("AB");
+      setCat("standard");
+      applyI18n();
+      renderTickets();
+      renderSummary();
+      closeOverlay();
+    }
+
+    // --- Prototype flow (payment + printing) ---
+    let progressTimer = null;
+
+    function openOverlay(kind){
+      const dict = I18N[state.lang];
+      const overlay = $("overlay");
+      overlay.classList.add("show");
+      overlay.setAttribute("aria-hidden","false");
+
+      $("modalTitle").textContent = dict.processing;
+      $("modalText").textContent = dict.follow;
+      $("modalSub").textContent = (kind==="card") ? dict.dontRemove : dict.insertCash;
+      $("bar").style.width = "0%";
+
+      let p = 0;
+      clearInterval(progressTimer);
+      progressTimer = setInterval(()=>{
+        p += Math.random()*18 + 8;
+        if (p >= 100){
+          p = 100;
+          $("bar").style.width = "100%";
+          clearInterval(progressTimer);
+
+          setTimeout(()=>{
+            $("modalTitle").textContent = dict.printing;
+            $("modalText").textContent = state.lang==="de" ? "Bitte warten…" : "Please wait…";
+            $("modalSub").textContent = state.receipt
+              ? (state.lang==="de" ? "Beleg wird zusätzlich gedruckt." : "A receipt will also be printed.")
+              : " ";
+
+            setTimeout(()=>{
+              $("modalTitle").textContent = dict.done;
+              $("modalText").textContent = dict.take;
+              $("modalSub").textContent = state.lang==="de"
+                ? "Tippen Sie auf „Zurücksetzen“, um neu zu starten."
+                : "Tap “Reset” to start over.";
+            }, 900);
+          }, 600);
+        } else {
+          $("bar").style.width = Math.round(p) + "%";
+        }
+      }, 420);
+    }
+
+    function closeOverlay(){
+      const overlay = $("overlay");
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden","true");
+      clearInterval(progressTimer);
+      progressTimer = null;
+    }
+
+    // --- Wire up ---
+    $("langDE").addEventListener("click", ()=> setLang("de"));
+    $("langEN").addEventListener("click", ()=> setLang("en"));
+
+    document.querySelectorAll(".zoneBtn").forEach(b=>{
+      b.addEventListener("click", ()=> setZone(b.dataset.zone));
+    });
+    document.querySelectorAll(".catBtn").forEach(b=>{
+      b.addEventListener("click", ()=> setCat(b.dataset.cat));
+    });
+
+    $("minusBtn").addEventListener("click", ()=> adjustQty(-1));
+    $("plusBtn").addEventListener("click", ()=> adjustQty(1));
+
+    $("resetBtn").addEventListener("click", ()=> resetAll());
+    $("toPayBtn").addEventListener("click", ()=> {
+      document.querySelector(".grid").scrollIntoView({behavior:"smooth", block:"start"});
+    });
+
+    $("payCardBtn").addEventListener("click", ()=> openOverlay("card"));
+    $("payCashBtn").addEventListener("click", ()=> openOverlay("cash"));
+    $("cancelBtn").addEventListener("click", ()=> closeOverlay());
+
+    $("receiptBtn").addEventListener("click", ()=>{
+      state.receipt = !state.receipt;
+      applyI18n();
+    });
+
+    window.addEventListener("keydown", (e)=>{
+      if (e.key === "Escape"){
+        resetAll();
+      }
+    });
+
+    // init
+    applyI18n();
+    setZone("AB");
+    setCat("standard");
+    renderTickets();
+    renderSummary();
+    updateZoneMap();
+  </script>
+</body>
+</html>
